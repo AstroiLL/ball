@@ -30,10 +30,12 @@ square_y = height // 2 - square_size // 2
 square_rotation = 0  # Initial rotation
 rotation_speed = 0.5  # Rotation speed
 
-
 # Game loop
 running = True
 clock = pygame.time.Clock()
+
+# Debug: Print initial state
+print("Pygame initialized successfully")
 
 def reflect_vector(vx, vy, nx, ny):
     # Reflect a vector (vx, vy) across a normal vector (nx, ny)
@@ -49,7 +51,8 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 rotation_speed -= 0.1
-            if event.key == pygame.K_RIGHT: rotation_speed += 0.1
+            if event.key == pygame.K_RIGHT:
+                rotation_speed += 0.1
 
     # Rotate the square
     square_rotation += rotation_speed
@@ -67,6 +70,34 @@ while running:
     # Ball movement
     ball_x += ball_speed_x
     ball_y += ball_speed_y
+
+    # Ensure the ball stays within the square
+    center_x = width // 2
+    center_y = height // 2
+    half_square_size = square_size // 2
+
+    # Calculate the distance from the center of the square to the ball
+    distance_x = ball_x - center_x
+    distance_y = ball_y - center_y
+
+    # Calculate the maximum allowed distance from the center to the edge of the square
+    max_distance = half_square_size - ball_radius
+
+    # Clamp the ball's position within the square
+    if abs(distance_x) > max_distance:
+        ball_x = center_x + max_distance * (distance_x / abs(distance_x))
+    if abs(distance_y) > max_distance:
+        ball_y = center_y + max_distance * (distance_y / abs(distance_y))
+
+    # Ensure the ball stays within the square after collision detection
+    if ball_x + ball_radius > center_x + half_square_size:
+        ball_x = center_x + half_square_size - ball_radius
+    if ball_x - ball_radius < center_x - half_square_size:
+        ball_x = center_x - half_square_size + ball_radius
+    if ball_y + ball_radius > center_y + half_square_size:
+        ball_y = center_y + half_square_size - ball_radius
+    if ball_y - ball_radius < center_y - half_square_size:
+        ball_y = center_y - half_square_size + ball_radius
 
     # Collision detection and response with rotated square
     for i in range(4):
@@ -105,7 +136,6 @@ while running:
                 ny /= norm
             ball_speed_x, ball_speed_y = reflect_vector(ball_speed_x, ball_speed_y, nx, ny)
 
-
     # Keep ball within screen bounds (simple bounce)
     if ball_x + ball_radius > width or ball_x - ball_radius < 0:
         ball_speed_x = -ball_speed_x
@@ -113,7 +143,9 @@ while running:
         ball_speed_y = -ball_speed_y
 
     # Drawing
-
+    print("Drawing frame")
+    print(f"Drawing square at corners: {corners}")
+    print(f"Drawing ball at position: ({ball_x}, {ball_y})")
     screen.fill(black)
     pygame.draw.polygon(screen, yellow, corners, 2)  # Draw rotated square
     pygame.draw.circle(screen, white, (int(ball_x), int(ball_y)), ball_radius)  # Draw ball
